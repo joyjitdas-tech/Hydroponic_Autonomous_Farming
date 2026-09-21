@@ -1,0 +1,33 @@
+{
+    "model_type": "1D-CNN",
+    "model": "baseline_cnn",
+    "input_features": [
+        "pH",
+        "TDS",
+        "water_level",
+        "DHT_temp",
+        "DHT_humidity",
+        "water_temp"
+    ],
+    "input_shape": [
+        6,
+        1
+    ],
+    "threshold": 0.5,
+    "health_labels": {
+        "0": "Unhealthy",
+        "1": "Healthy"
+    },
+    "health_thresholds": {
+        "pH_min": 5.5,
+        "pH_max": 7.0,
+        "TDS_min": 800,
+        "TDS_max": 1500,
+        "temp_min": 18,
+        "temp_max": 28,
+        "humidity_min": 50,
+        "humidity_max": 90,
+        "water_temp_min": 16,
+        "water_temp_max": 26
+    }
+}
