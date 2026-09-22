@@ -11,5 +11,7 @@ class Detection(BaseModel):
 class PredictionResponse(BaseModel):
     model: str
     inference_time_ms: float
-    detections: List[Detection]
-    annotated_image: str
+    energy_joules: float
+    carbon_footprint_gco2e: float
+    detections: list[Detection]
+    annotated_image: str | None = None

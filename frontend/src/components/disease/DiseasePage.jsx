@@ -137,7 +137,14 @@ export default function DiseasePage() {
           <span>Running the selected model…</span>
         </div>
       )}
-      {result && <DetectionResults detections={result.detections || []} />}
+      {result && (
+        <DetectionResults
+          detections={result.detections || []}
+          inferenceTimeMs={result.inference_time_ms}
+          energyJoules={result.energy_joules}
+          carbonFootprint={result.carbon_footprint_gco2e}
+        />
+      )}
     </div>
   );
 }
