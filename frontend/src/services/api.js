@@ -64,3 +64,32 @@ export async function simulateEnvironment({ mode, rowIndex }) {
 
   return response.json();
 }
+
+// This is for LLM advisory results.
+export async function analyzeWithAI(detections) {
+  const response = await fetch(
+    "http://127.0.0.1:8000/advisory/multiple",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        detections: detections.map((d) => ({
+          disease: d.disease,
+          confidence: Number(d.confidence),
+        })),
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.detail || "Unable to generate AI advisory."
+    );
+  }
+
+  return response.json();
+}

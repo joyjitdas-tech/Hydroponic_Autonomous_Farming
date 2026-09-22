@@ -3,19 +3,22 @@ from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from schemas.advisory import (
+    MultipleAdvisoryRequest
+)
 
 from orchestrator import (
     disease_prediction,
     environment_analysis,
     environment_simulation,
+    generate_multiple_advisories,
 )
-#uvicorn main:app --reload --port 8000
+
 app = FastAPI(
     title="Strawberry AI Gateway Service",
     description="Gateway for communicating with independent Strawberry AI services",
     version="1.0.0",
 )
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 def root():
     return {
@@ -33,17 +35,9 @@ def root():
         "status": "running",
     }
 
-
-# @app.get("/health")
-# def health():
-#     return {
-#         "status": "healthy",
-#         "services": {
-#             "disease_detection": "http://127.0.0.1:8001"
-#         }
-#     }
 DISEASE_SERVICE_URL = "http://127.0.0.1:8001"
 ENVIRONMENT_SERVICE_URL = "http://127.0.0.1:8002"
+ADVISORY_SERVICE_URL = "http://127.0.0.1:8003"
 
 @app.get("/health")
 async def health():
@@ -65,6 +59,13 @@ async def health():
         except Exception:
             services["environment"] = False
 
+        # Advisory
+        try:
+            response = await client.get(f"{ADVISORY_SERVICE_URL}/health")
+            services["advisory"] = response.status_code == 200
+        except Exception:
+            services["advisory"] = False
+
     return {
         "status": "healthy",
         "services": services
@@ -72,7 +73,6 @@ async def health():
 # -------------------------
 # Disease Detection
 # -------------------------
-
 @app.post("/analyze")
 async def analyze(
     file: UploadFile = File(...),
@@ -113,6 +113,47 @@ async def analyze(
             detail=f"Disease detection service error: {exc}",
         )
 
+
+# -------------------------
+# Advisory
+# -------------------------
+
+@app.post("/advisory/multiple")
+async def multiple_advisory(
+    request: MultipleAdvisoryRequest
+):
+
+    if not request.detections:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one disease detection is required."
+        )
+
+    try:
+
+        detections = [
+            {
+                "disease": detection.disease,
+                "confidence": detection.confidence
+            }
+            for detection in request.detections
+        ]
+
+        results = await generate_multiple_advisories(
+            detections
+        )
+
+        return {
+            "status": "success",
+            "advisories": results
+        }
+
+    except Exception as exc:
+
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI advisory service error: {exc}"
+        )
 
 
 # -------------------------
